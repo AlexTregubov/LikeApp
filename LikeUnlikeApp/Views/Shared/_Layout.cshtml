@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                    <li>@Html.ActionLink("About", "About", "Home")</li>
+                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <div>
+                <label id="likes_count"> 0 </label> <label> people Like this page </label>
+            </div>
+            <div>
+                <label id="unlikes_count"> 0 </label> <label> people Dislike this page </label>
+            </div>
+
+            <button id="like_btn" @((User.Identity.IsAuthenticated) ? "" : "disabled style=visibility:hidden")>Like</button>
+            <button id="unlike_btn" @((User.Identity.IsAuthenticated) ? "" : "disabled style=visibility:hidden")>Unlike</button>
+
+            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+
+<script>
+
+    window.onload = loadRatingData();
+
+    if (@User.Identity.IsAuthenticated.ToString().ToLower()) {
+        $("#like_btn").click(function() {
+            likeThis();
+        });
+        $("#unlike_btn").click(function() {
+            unlikeThis();
+        });
+    }
+
+    function loadRatingData() {
+
+        $.ajax({
+            type: "GET",
+            url: "/PageRating/Info?key=" + buildPageKey(),
+            success: function(result) {
+                updatePageRatingData(result);
+            }
+        });
+    };
+
+    function likeThis() {
+
+        $.ajax({
+            type: "POST",
+            url: "/PageRating/Like?key=" + buildPageKey(),
+            success: function(result) {
+                updatePageRatingData(result);
+            }
+        });
+    }
+
+    function unlikeThis() {
+
+        $.ajax({
+            type: "POST",
+            url: "/PageRating/Unlike?key=" + buildPageKey(),
+            success: function(result) {
+                updatePageRatingData(result);
+            }
+        });
+    }
+
+    function buildPageKey() {
+
+        var pathname = window.location.pathname;
+        var key = (pathname.replace(/\//g, '-') || '-');
+        console.log('new route', key);
+
+        return key;
+    }
+
+    function updatePageRatingData(result) {
+
+        var data = JSON.parse(result);
+        console.log('page statistics:', data.LikesNumber, data.UnLikesNumber);
+
+        $('#likes_count').text(data.LikesNumber);
+        $('#unlikes_count').text(data.UnLikesNumber);
+    }
+
+</script>
+
+</body>
+</html>
